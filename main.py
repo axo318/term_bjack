@@ -9,6 +9,7 @@ def main():
     while control.on:
         u = input_manager.captureInput()
         control.dealWithInput(u)
+        control.update()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 class InputManager:
 
     def __init__(self):
-        self.message = 'Type here >>'
+        self.message = ' >>'
 
     def captureInput(self):
         print()

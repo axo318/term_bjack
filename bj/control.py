@@ -1,35 +1,63 @@
 from bj.game import Game
-from bj.view import ViewController
+from bj.view import *
 
 
 class Mode:
-    def deal(self, user_input, control):
-        return self
+    """
+    ABSTRACT
+    """
+    def __init__(self):
+        self.last_input = None
+        self.previousMode = None
+        self.nextMode = None
 
+    def getNextMode(self, user_input):
+        self.last_input = user_input
+        self.previousMode = self.__class__
+        self.nextMode = self.__class__
+        if user_input == 'exit':
+            self.nextMode = ExitMode
 
-class GameMode(Mode):
-    pass
+    def execute(self, game, view_controller):
+        pass
 
 
 class ExitMode(Mode):
-    pass
+    def execute(self, game, view_controller):
+        view_controller.update(ExitView())
+        return True
 
 
-class IntroMode(Mode):
-    def deal(self, user_input, control):
+class MenuMode(Mode):
+    def getNextMode(self, user_input):
+        super().getNextMode(user_input)
         if user_input == "play":
-            control.view.body = "This is game mode!"
-            control.view.user_choices = "1.Draw\n2.Pass"
-            return GameMode()
+            self.nextMode = GameModeStart
+        return self.nextMode()
 
-        elif user_input == "exit":
-            control.view.body = "Exiting bj"
-            control.view.user_choices = ""
-            control.on = False
-            return ExitMode()
+    def execute(self, game, view_controller):
+        view_controller.update(MenuView())
 
-        else:
-            return self
+
+class GameMode(Mode):
+    """
+    ABSTRACT
+    """
+    def getNextMode(self, user_input):
+        super().getNextMode(user_input)
+        if user_input == 'menu':
+            self.nextMode = MenuMode
+        return self.nextMode()
+
+
+class GameModeStart(GameMode):
+    def getNextMode(self, user_input):
+        super().getNextMode(user_input)
+        return self.nextMode()
+
+    def execute(self, game, view_controller):
+        game.initialise()
+        view_controller.update(GameView(len(game.players)))
 
 
 class Controller:
@@ -37,14 +65,16 @@ class Controller:
     def __init__(self):
         self.on = True
         self.game = Game()
-        self.view = ViewController()
-        self.mode = IntroMode()
-
-        self.execute()
+        self.view_controller = ViewController()
+        self.mode = MenuMode()
+        self.mode.execute(self.game, self.view_controller)
+        self.update()
 
     def dealWithInput(self, user_input):
-        self.mode = self.mode.deal(user_input, self)
-        self.execute()
+        self.mode = self.mode.getNextMode(user_input)
+        sig = self.mode.execute(self.game, self.view_controller)
+        if sig is not None:
+            self.on = False
 
-    def execute(self):
-        self.view.draw()
+    def update(self):
+        self.view_controller.draw()

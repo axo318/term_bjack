@@ -13,6 +13,9 @@ class Card:
 
         return self.color == other.color and self.number == other.number
 
+    def __repr__(self):
+        return f"Card({self.color!r}, {self.number!r})"
+
     def getValue(self):
         if self.number in [2, 3, 4, 5, 6, 7]:
             return self.number
@@ -45,10 +48,14 @@ class CardDeck:
         self.strategy = strategy
         self.deck_state = InitialDeckState()
 
+    def __repr__(self):
+        return repr(self.deck_state.remaining_cards)
+
     def chooseCard(self):
         card = self.strategy.chooseCard(self.deck_state)
         self.deck_state.alter(card)
         return card
+
 
 
 class DeckState:
